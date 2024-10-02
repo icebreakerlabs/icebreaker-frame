@@ -23,6 +23,7 @@ export const {
     red: '#ff0000',
     orange: '#ffaa00',
     muted: '#B0B4BA',
+    'bg-emphasized': '#2E3135',
   },
   icons: lucide,
 });

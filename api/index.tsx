@@ -3,6 +3,7 @@ import { devtools } from 'frog/dev';
 import { serveStatic } from 'frog/serve-static';
 import { neynar } from 'frog/hubs';
 import { handle } from 'frog/vercel';
+import { inflateSync, deflateSync } from 'node:zlib';
 
 import { getIcebreakerbyFid, getIcebreakerbyFname } from '../lib/icebreaker.js';
 import { posthog } from '../lib/posthog.js';
@@ -12,78 +13,90 @@ import { EXISTING_CHANNEL_ICONS } from '../constants.js';
 
 const NEYNAR_API_KEY = process.env.NEYNAR_API_KEY!;
 
-export const app = new Frog({
+type FrogEnv = {
+  State: {
+    profile: string | undefined;
+  };
+};
+
+export const app = new Frog<FrogEnv>({
   ui: { vars },
   basePath: '/api',
   assetsPath: '/',
   hub: neynar({ apiKey: NEYNAR_API_KEY }),
   title: 'Icebreaker Lookup Frame',
+  initialState: {
+    profile: undefined,
+  },
 });
 
-app.frame('/', async ({ buttonValue, inputText, frameData, status, res }) => {
-  const fid = frameData?.fid;
+app.frame(
+  '/',
+  async ({ buttonValue, inputText, frameData, status, previousState, res }) => {
+    const fid = frameData?.fid;
 
-  if (fid) {
-    if (inputText) {
-      await posthog.capture({
-        distinctId: fid.toString(),
-        event: 'search',
-        properties: { username: inputText },
-      });
-      await posthog.shutdown();
-    } else if (buttonValue === 'mine') {
-      await posthog.capture({
-        distinctId: fid.toString(),
-        event: 'view_mine',
-      });
-      await posthog.shutdown();
-    } else {
-      await posthog.identify({
-        distinctId: fid.toString(),
-        properties: { fid },
-      });
-      await posthog.shutdown();
+    if (fid) {
+      if (inputText) {
+        await posthog.capture({
+          distinctId: fid.toString(),
+          event: 'search',
+          properties: { username: inputText },
+        });
+        await posthog.shutdown();
+      } else if (buttonValue === 'mine') {
+        await posthog.capture({
+          distinctId: fid.toString(),
+          event: 'view_mine',
+        });
+        await posthog.shutdown();
+      } else {
+        await posthog.identify({
+          distinctId: fid.toString(),
+          properties: { fid },
+        });
+        await posthog.shutdown();
+      }
     }
-  }
 
-  const profile =
-    buttonValue === 'mine' && fid
-      ? await getIcebreakerbyFid(fid)
-      : inputText
-        ? await getIcebreakerbyFname(inputText)
-        : undefined;
+    const profile =
+      buttonValue === 'mine' && fid
+        ? await getIcebreakerbyFid(fid)
+        : inputText
+          ? await getIcebreakerbyFname(inputText)
+          : undefined;
 
-  if (!profile) {
+    if (!profile) {
+      return res({
+        image: '/image.png',
+        intents: [
+          <TextInput placeholder="Enter farcaster username..." />,
+          <Button value="search">Search</Button>,
+          <Button value="mine">View mine</Button>,
+          status === 'response' && <Button.Reset>Reset</Button.Reset>,
+          <Button.AddCastAction action="/add">Add</Button.AddCastAction>,
+        ],
+      });
+    }
+
+    previousState.profile = deflateSync(JSON.stringify(profile)).toString(
+      'base64',
+    );
+
     return res({
-      image: '/image.png',
+      image: '/profile_img',
       intents: [
         <TextInput placeholder="Enter farcaster username..." />,
         <Button value="search">Search</Button>,
-        <Button value="mine">View mine</Button>,
-        status === 'response' && <Button.Reset>Reset</Button.Reset>,
-        <Button.AddCastAction action="/add">Add</Button.AddCastAction>,
+        <Button.Link
+          href={`https://app.icebreaker.xyz/profiles/${profile.profileID}`}
+        >
+          View
+        </Button.Link>,
+        <Button.Reset>Reset</Button.Reset>,
       ],
     });
-  }
-
-  return res({
-    image: (
-      <Box grow backgroundColor="background" padding="60">
-        <Profile profile={profile} />
-      </Box>
-    ),
-    intents: [
-      <TextInput placeholder="Enter farcaster username..." />,
-      <Button value="search">Search</Button>,
-      <Button.Link
-        href={`https://app.icebreaker.xyz/profiles/${profile.profileID}`}
-      >
-        View
-      </Button.Link>,
-      <Button.Reset>Reset</Button.Reset>,
-    ],
-  });
-});
+  },
+);
 
 app.frame('/profile', async ({ frameData, res }) => {
   const fid = frameData?.fid;
@@ -92,7 +105,10 @@ app.frame('/profile', async ({ frameData, res }) => {
 
   if (!profile) {
     return res({
-      image: '/image.png',
+      image: '/profile_img',
+      headers: {
+        'cache-control': 'max-age=0',
+      },
       intents: [
         <TextInput placeholder="Enter farcaster username..." />,
         <Button value="search">Search</Button>,
@@ -108,6 +124,9 @@ app.frame('/profile', async ({ frameData, res }) => {
         <Profile profile={profile} />
       </Box>
     ),
+    headers: {
+      'cache-control': 'max-age=0',
+    },
     intents: [
       <TextInput placeholder="Enter farcaster username..." />,
       <Button value="search">Search</Button>,
@@ -118,6 +137,38 @@ app.frame('/profile', async ({ frameData, res }) => {
       </Button.Link>,
       <Button.Reset>Reset</Button.Reset>,
     ],
+  });
+});
+
+app.image('/profile_img', async ({ previousState, res }) => {
+  let profile: IcebreakerProfile | undefined;
+
+  if (previousState.profile) {
+    try {
+      profile = JSON.parse(
+        inflateSync(Buffer.from(previousState.profile, 'base64')).toString(),
+      );
+    } catch {
+      profile = undefined;
+    }
+  }
+
+  if (!profile) {
+    return res({
+      image: (
+        <Box grow backgroundColor="background">
+          <Image src="/image.png" />
+        </Box>
+      ),
+    });
+  }
+
+  return res({
+    image: (
+      <Box grow backgroundColor="background" padding="60">
+        <Profile profile={profile} />
+      </Box>
+    ),
   });
 });
 
@@ -186,6 +237,44 @@ function Profile({ profile }: ProfileProps) {
             <Text size="12" color="text" weight="600">
               {profile.location}
             </Text>
+          </HStack>
+        )}
+
+        {!!(profile.networkingStatus || profile.primarySkill) && (
+          <HStack gap="4">
+            {profile.networkingStatus && (
+              <Box
+                background="bg-emphasized"
+                paddingBottom="4"
+                paddingTop="4"
+                paddingLeft="12"
+                paddingRight="12"
+                borderRadius="48"
+                textTransform="uppercase"
+                alignSelf="flex-start"
+              >
+                <Text size="12" color="text" weight="900">
+                  {profile.networkingStatus}
+                </Text>
+              </Box>
+            )}
+
+            {profile.primarySkill && (
+              <Box
+                background="bg-emphasized"
+                paddingBottom="4"
+                paddingTop="4"
+                paddingLeft="12"
+                paddingRight="12"
+                borderRadius="48"
+                textTransform="uppercase"
+                alignSelf="flex-start"
+              >
+                <Text size="12" color="text" weight="900">
+                  {profile.primarySkill}
+                </Text>
+              </Box>
+            )}
           </HStack>
         )}
 
