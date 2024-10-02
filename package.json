@@ -3,15 +3,20 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "build": "frog vercel-build",
-    "dev": "frog dev",
+    "build": "dotenvx run -- frog vercel-build",
+    "dev": "dotenvx run -- frog dev",
+    "format": "prettier --write src",
     "deploy": "vercel"
   },
   "dependencies": {
-    "frog": "latest",
-    "hono": "^4"
+    "@dotenvx/dotenvx": "^1.14.2",
+    "@neynar/nodejs-sdk": "^1.55.0",
+    "frog": "^0.17.3",
+    "hono": "^4.6.3",
+    "posthog-node": "^4.2.0"
   },
   "devDependencies": {
+    "prettier": "^3.3.3",
     "tsx": "^4.7.1",
     "typescript": "^5.3.3",
     "vercel": "^32.4.1"
