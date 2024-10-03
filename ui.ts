@@ -22,6 +22,7 @@ export const {
     green: '#00ff00',
     red: '#ff0000',
     orange: '#ffaa00',
+    white: '#ffffff',
     muted: '#B0B4BA',
     'bg-emphasized': '#2E3135',
   },
