@@ -43,3 +43,14 @@ export type IcebreakerProfile = {
   highlights?: Highlight[];
   workExperience?: WorkExperience[];
 };
+
+export type RenderedProfile = Required<
+  Pick<IcebreakerProfile, 'avatarUrl' | 'displayName'>
+> &
+  Pick<
+    IcebreakerProfile,
+    'bio' | 'jobTitle' | 'location' | 'networkingStatus' | 'primarySkill'
+  > & {
+    credentialsCount: number;
+    verifiedChannels: Channel['type'][];
+  };

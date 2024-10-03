@@ -11,7 +11,7 @@
   "dependencies": {
     "@dotenvx/dotenvx": "^1.14.2",
     "@neynar/nodejs-sdk": "^1.55.0",
-    "frog": "^0.17.3",
+    "frog": "^0.17.4",
     "hono": "^4.6.3",
     "posthog-node": "^4.2.0"
   },
@@ -19,6 +19,6 @@
     "prettier": "^3.3.3",
     "tsx": "^4.7.1",
     "typescript": "^5.3.3",
-    "vercel": "^32.4.1"
+    "vercel": "^37.6.0"
   }
 }
