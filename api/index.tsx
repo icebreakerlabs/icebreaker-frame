@@ -168,6 +168,8 @@ async function capture(fid?: number, buttonValue?: string, inputText?: string) {
 app.frame(
   '/',
   async ({ buttonValue, inputText, frameData, deriveState, status, res }) => {
+    await capture(frameData?.fid, buttonValue, inputText);
+
     const { address } = await deriveState(async (previousState) => {
       const profile =
         status === 'initial'
@@ -181,8 +183,6 @@ app.frame(
       previousState.address = profile?.walletAddress ?? '';
       previousState.profile = compressProfile(toRenderedProfile(profile)) ?? '';
     });
-
-    await capture(frameData?.fid, buttonValue, inputText);
 
     return res({
       image: '/profile_img',
@@ -212,6 +212,8 @@ app.frame(
 app.frame(
   '/cast-action',
   async ({ frameData, buttonValue, inputText, deriveState, res }) => {
+    await capture(frameData?.fid);
+
     const { address } = await deriveState(async (previousState) => {
       const profile =
         buttonValue === 'reset-search'
@@ -225,8 +227,6 @@ app.frame(
       previousState.address = profile?.walletAddress ?? '';
       previousState.profile = compressProfile(toRenderedProfile(profile)) ?? '';
     });
-
-    await capture(frameData?.fid);
 
     return res({
       image: '/profile_img',
