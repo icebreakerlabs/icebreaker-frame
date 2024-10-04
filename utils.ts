@@ -14,9 +14,7 @@ export function toRenderedProfile(
   }
 
   return {
-    avatarUrl:
-      profile.avatarUrl ||
-      'https://icebreaker-nft-images.s3.amazonaws.com/avatar_black_1.webp',
+    avatarUrl: profile.avatarUrl || '/avatar_black.png',
     displayName: profile.displayName || truncateAddress(profile.walletAddress),
     bio: profile.bio,
     jobTitle: profile.jobTitle,
