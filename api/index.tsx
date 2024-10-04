@@ -187,18 +187,18 @@ app.frame(
     return res({
       image: '/profile_img',
       intents:
-        status === 'initial' || !address
+        address && status !== 'initial'
           ? [
-              <TextInput placeholder="Enter farcaster username..." />,
-              <Button value="search">Search</Button>,
-              <Button value="mine">View mine</Button>,
-              <Button.AddCastAction action="/add">Add</Button.AddCastAction>,
-            ]
-          : [
               <Button.Link href={`https://app.icebreaker.xyz/eth/${address}`}>
                 View
               </Button.Link>,
               <Button.Reset>Reset</Button.Reset>,
+            ]
+          : [
+              <TextInput placeholder="Enter farcaster username..." />,
+              <Button value="search">Search</Button>,
+              <Button value="mine">View mine</Button>,
+              <Button.AddCastAction action="/add">Add</Button.AddCastAction>,
             ],
       headers: {
         'cache-control': 'max-age=0',
@@ -224,13 +224,8 @@ app.frame('/cast-action', async ({ frameData, deriveState, res }) => {
           <Button.Link href={`https://app.icebreaker.xyz/eth/${address}`}>
             View
           </Button.Link>,
-          <Button.Redirect location="/">Reset</Button.Redirect>,
         ]
-      : [
-          <TextInput placeholder="Enter farcaster username..." />,
-          <Button value="search">Search</Button>,
-          <Button value="mine">View mine</Button>,
-        ],
+      : undefined,
     headers: {
       'cache-control': 'max-age=0',
     },
