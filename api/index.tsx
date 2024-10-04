@@ -198,7 +198,9 @@ app.frame(
               <TextInput placeholder="Enter farcaster username..." />,
               <Button value="search">Search</Button>,
               <Button value="mine">View mine</Button>,
-              <Button.AddCastAction action="/add">Add</Button.AddCastAction>,
+              <Button.AddCastAction action="/add">
+                Install action
+              </Button.AddCastAction>,
             ],
       headers: {
         'cache-control': 'max-age=0',
