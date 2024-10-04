@@ -17,7 +17,7 @@ npm install
 After installation, you can start the application with:
 
 ```bash
-npm start
+npm run dev
 ```
 
 Navigate to `http://localhost:5174/api/dev` in your web browser to access the application.
