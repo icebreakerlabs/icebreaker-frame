@@ -224,6 +224,7 @@ app.frame('/cast-action', async ({ frameData, deriveState, res }) => {
           <Button.Link href={`https://app.icebreaker.xyz/eth/${address}`}>
             View
           </Button.Link>,
+          <Button.Reset>Reset</Button.Reset>,
         ]
       : undefined,
     headers: {
