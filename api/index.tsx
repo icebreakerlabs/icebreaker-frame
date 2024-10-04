@@ -228,18 +228,19 @@ app.frame(
 
     return res({
       image: '/profile_img',
-      intents: address
-        ? [
-            <Button.Link href={`https://app.icebreaker.xyz/eth/${address}`}>
-              View
-            </Button.Link>,
-            <Button value="reset-search">Search</Button>,
-          ]
-        : [
-            <TextInput placeholder="Enter farcaster username..." />,
-            <Button value="search">Search</Button>,
-            <Button value="mine">View mine</Button>,
-          ],
+      intents:
+        address && buttonValue !== 'reset-search'
+          ? [
+              <Button.Link href={`https://app.icebreaker.xyz/eth/${address}`}>
+                View
+              </Button.Link>,
+              <Button value="reset-search">Search</Button>,
+            ]
+          : [
+              <TextInput placeholder="Enter farcaster username..." />,
+              <Button value="search">Search</Button>,
+              <Button value="mine">View mine</Button>,
+            ],
       headers: {
         'cache-control': 'max-age=0',
       },
