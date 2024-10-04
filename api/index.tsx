@@ -19,7 +19,7 @@ const NEYNAR_API_KEY = process.env.NEYNAR_API_KEY!;
 
 type FrogEnv = {
   State: {
-    profileID: string | undefined;
+    address: string | undefined;
     profile: string | undefined;
   };
 };
@@ -31,7 +31,7 @@ export const app = new Frog<FrogEnv>({
   hub: neynar({ apiKey: NEYNAR_API_KEY }),
   title: 'Icebreaker Lookup Frame',
   initialState: {
-    profileID: undefined,
+    address: undefined,
     profile: undefined,
   },
 });
@@ -168,7 +168,7 @@ async function capture(fid?: number, buttonValue?: string, inputText?: string) {
 app.frame(
   '/',
   async ({ buttonValue, inputText, frameData, deriveState, status, res }) => {
-    const { profileID } = await deriveState(async (previousState) => {
+    const { address } = await deriveState(async (previousState) => {
       const profile =
         status === 'initial'
           ? undefined
@@ -178,10 +178,7 @@ app.frame(
               ? await getIcebreakerbyFname(inputText)
               : undefined;
 
-      previousState.profileID =
-        (profile?.profileID ?? profile?.walletAddress)
-          ? `wallet-${profile.walletAddress}`
-          : '';
+      previousState.address = profile?.walletAddress ?? '';
       previousState.profile = compressProfile(toRenderedProfile(profile)) ?? '';
     });
 
@@ -190,7 +187,7 @@ app.frame(
     return res({
       image: '/profile_img',
       intents:
-        status === 'initial' || !profileID
+        status === 'initial' || !address
           ? [
               <TextInput placeholder="Enter farcaster username..." />,
               <Button value="search">Search</Button>,
@@ -198,9 +195,7 @@ app.frame(
               <Button.AddCastAction action="/add">Add</Button.AddCastAction>,
             ]
           : [
-              <Button.Link
-                href={`https://app.icebreaker.xyz/profiles/${profileID}`}
-              >
+              <Button.Link href={`https://app.icebreaker.xyz/eth/${address}`}>
                 View
               </Button.Link>,
               <Button.Reset>Reset</Button.Reset>,
@@ -213,13 +208,10 @@ app.frame(
 );
 
 app.frame('/cast-action', async ({ frameData, deriveState, res }) => {
-  const { profileID } = await deriveState(async (previousState) => {
+  const { address } = await deriveState(async (previousState) => {
     const profile = await getIcebreakerbyFid(frameData?.castId.fid);
 
-    previousState.profileID =
-      (profile?.profileID ?? profile?.walletAddress)
-        ? `wallet-${profile.walletAddress}`
-        : '';
+    previousState.address = profile?.walletAddress ?? '';
     previousState.profile = compressProfile(toRenderedProfile(profile)) ?? '';
   });
 
@@ -227,11 +219,9 @@ app.frame('/cast-action', async ({ frameData, deriveState, res }) => {
 
   return res({
     image: '/profile_img',
-    intents: profileID
+    intents: address
       ? [
-          <Button.Link
-            href={`https://app.icebreaker.xyz/profiles/${profileID}`}
-          >
+          <Button.Link href={`https://app.icebreaker.xyz/eth/${address}`}>
             View
           </Button.Link>,
           <Button.Redirect location="/">Reset</Button.Redirect>,
