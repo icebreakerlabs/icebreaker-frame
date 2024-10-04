@@ -209,12 +209,16 @@ app.frame(
 
 app.frame(
   '/cast-action',
-  async ({ frameData, buttonValue, deriveState, res }) => {
+  async ({ frameData, buttonValue, inputText, deriveState, res }) => {
     const { address } = await deriveState(async (previousState) => {
       const profile =
         buttonValue === 'reset-search'
           ? undefined
-          : await getIcebreakerbyFid(frameData?.castId.fid);
+          : buttonValue === 'mine'
+            ? await getIcebreakerbyFid(frameData?.fid)
+            : inputText
+              ? await getIcebreakerbyFname(inputText)
+              : await getIcebreakerbyFid(frameData?.castId.fid);
 
       previousState.address = profile?.walletAddress ?? '';
       previousState.profile = compressProfile(toRenderedProfile(profile)) ?? '';
