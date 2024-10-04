@@ -6,7 +6,13 @@ export function truncateAddress(address: string | undefined) {
   return address?.replace(address.slice(6, -4), '...') ?? '';
 }
 
-export function toRenderedProfile(profile: IcebreakerProfile): RenderedProfile {
+export function toRenderedProfile(
+  profile?: IcebreakerProfile,
+): RenderedProfile | undefined {
+  if (!profile) {
+    return;
+  }
+
   return {
     avatarUrl:
       profile.avatarUrl ||
@@ -25,12 +31,26 @@ export function toRenderedProfile(profile: IcebreakerProfile): RenderedProfile {
   };
 }
 
-export function compressProfile(profile: RenderedProfile) {
+export function compressProfile(profile?: RenderedProfile) {
+  if (!profile) {
+    return;
+  }
+
   return deflateSync(JSON.stringify(profile)).toString('base64');
 }
 
-export function decompressProfile(compressedProfile: string): RenderedProfile {
-  return JSON.parse(
-    inflateSync(Buffer.from(compressedProfile, 'base64')).toString(),
-  );
+export function decompressProfile(
+  compressedProfile?: string,
+): RenderedProfile | undefined {
+  if (!compressedProfile) {
+    return;
+  }
+
+  try {
+    return JSON.parse(
+      inflateSync(Buffer.from(compressedProfile, 'base64')).toString(),
+    );
+  } catch {
+    return;
+  }
 }
