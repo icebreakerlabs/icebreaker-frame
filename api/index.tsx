@@ -50,34 +50,34 @@ function Profile({
   return (
     <VStack gap="8" width="100%">
       <Box position="absolute" left="0" right="0">
-        <Image src={avatarUrl} width="64" height="64" borderRadius="32" />
+        <Image src={avatarUrl} width="96" height="96" borderRadius="48" />
       </Box>
 
-      <VStack gap="8" marginLeft="16" paddingLeft="64">
-        <Heading size="20" color="text" weight="500">
+      <VStack gap="8" marginLeft="16" paddingLeft="96">
+        <Heading size="32" color="text" weight="500">
           {displayName}
         </Heading>
 
-        <Text size="14" color="muted" weight="600">
+        <Text size="20" color="muted" weight="600">
           {jobTitle}
         </Text>
 
-        <Text size="14" color="text" weight="500">
+        <Text size="20" color="text" weight="500">
           {bio}
         </Text>
 
         {!!location && (
           <HStack gap="4">
-            <Image src="/location.png" width="16" height="16" />
+            <Image src="/location.png" width="20" height="20" />
 
-            <Text size="12" color="text" weight="600">
+            <Text size="16" color="text" weight="600">
               {location}
             </Text>
           </HStack>
         )}
 
         {!!(networkingStatus || primarySkill) && (
-          <HStack gap="8">
+          <HStack gap="8" paddingTop="6">
             {!!networkingStatus && (
               <Box
                 background="bg-emphasized"
@@ -88,9 +88,9 @@ function Profile({
                 borderRadius="48"
                 textTransform="uppercase"
                 alignSelf="flex-start"
+                fontSize="16"
                 fontWeight="900"
                 color="white"
-                fontSize="12"
               >
                 {networkingStatus}
               </Box>
@@ -106,9 +106,9 @@ function Profile({
                 borderRadius="48"
                 textTransform="uppercase"
                 alignSelf="flex-start"
+                fontSize="16"
                 fontWeight="900"
                 color="white"
-                fontSize="12"
               >
                 {primarySkill}
               </Box>
@@ -116,7 +116,7 @@ function Profile({
           </HStack>
         )}
 
-        <Text size="14" color="muted" weight="600">
+        <Text size="20" color="muted" weight="600">
           {credentialsCount} credentials
         </Text>
 
@@ -129,8 +129,8 @@ function Profile({
                     ? `/${channelType}.png`
                     : '/unknown.png'
                 }
-                width="16"
-                height="16"
+                width="20"
+                height="20"
               />
             ))}
           </HStack>
@@ -253,7 +253,7 @@ app.image('/profile_img', async ({ previousState, res }) => {
 
   return res({
     image: renderedProfile ? (
-      <Box grow backgroundColor="background" padding="60">
+      <Box grow backgroundColor="background" padding="20">
         <Profile {...renderedProfile} />
       </Box>
     ) : (
@@ -263,6 +263,9 @@ app.image('/profile_img', async ({ previousState, res }) => {
     ),
     headers: {
       'cache-control': 'max-age=0',
+    },
+    imageOptions: {
+      format: 'svg',
     },
   });
 });
