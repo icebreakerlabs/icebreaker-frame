@@ -117,7 +117,7 @@ function Profile({
         )}
 
         <Text size="20" color="muted" weight="600">
-          {credentialsCount} credentials
+          {`${credentialsCount}`} credentials
         </Text>
 
         {verifiedChannels.length > 0 && (
@@ -279,7 +279,7 @@ app.castAction(
   },
   {
     name: 'Icebreaker Lookup',
-    icon: 'globe',
+    icon: 'search',
   },
 );
 
