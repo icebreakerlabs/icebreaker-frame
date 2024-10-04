@@ -207,7 +207,7 @@ app.frame(
 );
 
 app.frame('/profile', async ({ frameData, res }) => {
-  const fid = frameData?.fid;
+  const fid = frameData?.castId.fid;
 
   const profile = await getIcebreakerbyFid(fid);
 
