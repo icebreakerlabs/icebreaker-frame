@@ -192,7 +192,7 @@ app.frame(
               <Button.Link href={`https://app.icebreaker.xyz/eth/${address}`}>
                 View
               </Button.Link>,
-              <Button.Reset>Reset</Button.Reset>,
+              <Button.Reset>Back</Button.Reset>,
             ]
           : [
               <TextInput placeholder="Enter farcaster username..." />,
