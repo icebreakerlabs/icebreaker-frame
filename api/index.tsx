@@ -190,6 +190,7 @@ app.frame('/fname/:fname', async (context) => {
           >
             View
           </Button.Link>,
+          <Button.Reset>Back</Button.Reset>,
         ]
       : [
           <TextInput placeholder="Enter farcaster username..." />,
@@ -226,6 +227,7 @@ app.frame('/fid/:fid', async (context) => {
           >
             View
           </Button.Link>,
+          <Button.Reset>Back</Button.Reset>,
         ]
       : [
           <TextInput placeholder="Enter farcaster username..." />,
