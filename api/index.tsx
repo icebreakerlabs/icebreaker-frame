@@ -34,6 +34,9 @@ export const app = new Frog<FrogEnv>({
     address: undefined,
     profile: undefined,
   },
+  headers: {
+    'cache-control': 'no-cache, no-store',
+  },
 });
 
 function Profile({
@@ -167,22 +170,23 @@ async function capture(fid?: number, buttonValue?: string, inputText?: string) {
   }
 }
 
-app.frame('/fname/:fname', async ({ req, previousState, frameData, res }) => {
-  const { fname } = req.param();
+app.frame('/fname/:fname', async (context) => {
+  const { fname } = context.req.param();
 
   const profile = await getIcebreakerbyFname(fname);
 
-  previousState.address = profile?.walletAddress ?? '';
-  previousState.profile = compressProfile(toRenderedProfile(profile)) ?? '';
+  context.previousState.address = profile?.walletAddress ?? '';
+  context.previousState.profile =
+    compressProfile(toRenderedProfile(profile)) ?? '';
 
-  await capture(frameData?.fid, undefined, fname);
+  await capture(context.frameData?.fid, undefined, fname);
 
-  return res({
+  return context.res({
     image: '/profile_img',
-    intents: previousState.address
+    intents: context.previousState.address
       ? [
           <Button.Link
-            href={`https://app.icebreaker.xyz/eth/${previousState.address}`}
+            href={`https://app.icebreaker.xyz/eth/${context.previousState.address}`}
           >
             View
           </Button.Link>,
@@ -196,28 +200,29 @@ app.frame('/fname/:fname', async ({ req, previousState, frameData, res }) => {
           </Button.AddCastAction>,
         ],
     headers: {
-      'cache-control': 'max-age=0',
+      'cache-control': 'no-cache, no-store',
     },
   });
 });
 
-app.frame('/fid/:fid', async ({ req, previousState, frameData, res }) => {
-  const { fid: fidParam } = req.param();
+app.frame('/fid/:fid', async (context) => {
+  const { fid: fidParam } = context.req.param();
   const fid = +fidParam;
 
   const profile = await getIcebreakerbyFid(fid);
 
-  previousState.address = profile?.walletAddress ?? '';
-  previousState.profile = compressProfile(toRenderedProfile(profile)) ?? '';
+  context.previousState.address = profile?.walletAddress ?? '';
+  context.previousState.profile =
+    compressProfile(toRenderedProfile(profile)) ?? '';
 
-  await capture(frameData?.fid);
+  await capture(context.frameData?.fid);
 
-  return res({
+  return context.res({
     image: '/profile_img',
-    intents: previousState.address
+    intents: context.previousState.address
       ? [
           <Button.Link
-            href={`https://app.icebreaker.xyz/eth/${previousState.address}`}
+            href={`https://app.icebreaker.xyz/eth/${context.previousState.address}`}
           >
             View
           </Button.Link>,
@@ -231,100 +236,111 @@ app.frame('/fid/:fid', async ({ req, previousState, frameData, res }) => {
           </Button.AddCastAction>,
         ],
     headers: {
-      'cache-control': 'max-age=0',
+      'cache-control': 'no-cache, no-store',
     },
   });
 });
 
-app.frame(
-  '/',
-  async ({ buttonValue, inputText, frameData, previousState, status, res }) => {
-    const profile =
-      status === 'initial'
-        ? undefined
-        : buttonValue === 'mine'
-          ? await getIcebreakerbyFid(frameData?.fid)
-          : inputText
-            ? await getIcebreakerbyFname(inputText)
-            : undefined;
+app.frame('/', async (context) => {
+  const profile =
+    context.status === 'initial'
+      ? undefined
+      : context.buttonValue === 'mine'
+        ? await getIcebreakerbyFid(context.frameData?.fid)
+        : context.inputText
+          ? await getIcebreakerbyFname(context.inputText)
+          : undefined;
 
-    previousState.address = profile?.walletAddress ?? '';
-    previousState.profile = compressProfile(toRenderedProfile(profile)) ?? '';
+  context.previousState.address = profile?.walletAddress ?? '';
+  context.previousState.profile =
+    compressProfile(toRenderedProfile(profile)) ?? '';
 
-    await capture(frameData?.fid, buttonValue, inputText);
+  await capture(context.frameData?.fid, context.buttonValue, context.inputText);
 
-    return res({
-      image: '/profile_img',
-      intents:
-        previousState.address && status !== 'initial'
-          ? [
-              <Button.Link
-                href={`https://app.icebreaker.xyz/eth/${previousState.address}`}
-              >
-                View
-              </Button.Link>,
-              <Button.Reset>Back</Button.Reset>,
-            ]
-          : [
-              <TextInput placeholder="Enter farcaster username..." />,
-              <Button value="search">Search</Button>,
-              <Button value="mine">View mine</Button>,
-              <Button.AddCastAction action="/add">
-                Install action
-              </Button.AddCastAction>,
-            ],
-      headers: {
-        'cache-control': 'max-age=0',
-      },
-    });
+  return context.res({
+    image: '/profile_img',
+    intents:
+      context.previousState.address && context.status !== 'initial'
+        ? [
+            <Button.Link
+              href={`https://app.icebreaker.xyz/eth/${context.previousState.address}`}
+            >
+              View
+            </Button.Link>,
+            <Button.Reset>Back</Button.Reset>,
+          ]
+        : [
+            <TextInput placeholder="Enter farcaster username..." />,
+            <Button value="search">Search</Button>,
+            <Button value="mine">View mine</Button>,
+            <Button.AddCastAction action="/add">
+              Install action
+            </Button.AddCastAction>,
+          ],
+    headers: {
+      'cache-control': 'no-cache, no-store',
+    },
+  });
+});
+
+app.frame('/cast-action', async (context) => {
+  const profile =
+    context.buttonValue === 'reset-search'
+      ? undefined
+      : context.buttonValue === 'mine'
+        ? await getIcebreakerbyFid(context.frameData?.fid)
+        : context.inputText
+          ? await getIcebreakerbyFname(context.inputText)
+          : await getIcebreakerbyFid(context.frameData?.castId.fid);
+
+  context.previousState.address = profile?.walletAddress ?? '';
+  context.previousState.profile =
+    compressProfile(toRenderedProfile(profile)) ?? '';
+
+  await capture(context.frameData?.fid);
+
+  return context.res({
+    image: '/profile_img',
+    intents:
+      context.previousState.address && context.buttonValue !== 'reset-search'
+        ? [
+            <Button.Link
+              href={`https://app.icebreaker.xyz/eth/${context.previousState.address}`}
+            >
+              View
+            </Button.Link>,
+            <Button value="reset-search">Search</Button>,
+          ]
+        : [
+            <TextInput placeholder="Enter farcaster username..." />,
+            <Button value="search">Search</Button>,
+            <Button value="mine">View mine</Button>,
+          ],
+    headers: {
+      'cache-control': 'no-cache, no-store',
+    },
+  });
+});
+
+app.castAction(
+  '/add',
+  async (context) => {
+    console.log(
+      `Cast Action to ${JSON.stringify(context.actionData.castId)} from ${context.actionData.fid}`,
+    );
+
+    return context.res({ type: 'frame', path: '/cast-action' });
+  },
+  {
+    name: 'Icebreaker Lookup',
+    icon: 'search',
   },
 );
 
-app.frame(
-  '/cast-action',
-  async ({ frameData, buttonValue, inputText, previousState, res }) => {
-    const profile =
-      buttonValue === 'reset-search'
-        ? undefined
-        : buttonValue === 'mine'
-          ? await getIcebreakerbyFid(frameData?.fid)
-          : inputText
-            ? await getIcebreakerbyFname(inputText)
-            : await getIcebreakerbyFid(frameData?.castId.fid);
+app.image('/profile_img', async (context) => {
+  const renderedProfile = decompressProfile(context.previousState.profile);
 
-    previousState.address = profile?.walletAddress ?? '';
-    previousState.profile = compressProfile(toRenderedProfile(profile)) ?? '';
-
-    await capture(frameData?.fid);
-
-    return res({
-      image: '/profile_img',
-      intents:
-        previousState.address && buttonValue !== 'reset-search'
-          ? [
-              <Button.Link
-                href={`https://app.icebreaker.xyz/eth/${previousState.address}`}
-              >
-                View
-              </Button.Link>,
-              <Button value="reset-search">Search</Button>,
-            ]
-          : [
-              <TextInput placeholder="Enter farcaster username..." />,
-              <Button value="search">Search</Button>,
-              <Button value="mine">View mine</Button>,
-            ],
-      headers: {
-        'cache-control': 'max-age=0',
-      },
-    });
-  },
-);
-
-app.image('/profile_img', async ({ previousState, res }) => {
-  const renderedProfile = decompressProfile(previousState.profile);
-
-  return res({
+  return context.res({
     image: renderedProfile ? (
       <Box grow backgroundColor="background" padding="20">
         <Profile {...renderedProfile} />
@@ -334,27 +350,13 @@ app.image('/profile_img', async ({ previousState, res }) => {
         <Image src="/image.png" />
       </Box>
     ),
-    headers: {
-      'cache-control': 'max-age=0',
-    },
     imageOptions: {
-      format: 'svg',
+      headers: {
+        'cache-control': 'no-cache, no-store',
+      },
     },
   });
 });
-
-app.castAction(
-  '/add',
-  async ({ actionData: { castId, fid }, res }) => {
-    console.log(`Cast Action to ${JSON.stringify(castId)} from ${fid}`);
-
-    return res({ type: 'frame', path: '/cast-action' });
-  },
-  {
-    name: 'Icebreaker Lookup',
-    icon: 'search',
-  },
-);
 
 // @ts-ignore
 const isEdgeFunction = typeof EdgeFunction !== 'undefined';
