@@ -141,35 +141,35 @@ function Profile({
 }
 
 async function capture(fid?: number, buttonValue?: string, inputText?: string) {
-  if (fid) {
-    if (inputText) {
-      await posthog.capture({
-        distinctId: fid.toString(),
-        event: 'search',
-        properties: { username: inputText },
-      });
-      await posthog.shutdown();
-    } else if (buttonValue === 'mine') {
-      await posthog.capture({
-        distinctId: fid.toString(),
-        event: 'view_mine',
-      });
-      await posthog.shutdown();
-    } else {
-      await posthog.identify({
-        distinctId: fid.toString(),
-        properties: { fid },
-      });
-      await posthog.shutdown();
-    }
+  if (!fid) {
+    return;
+  }
+
+  if (inputText) {
+    await posthog.capture({
+      distinctId: fid.toString(),
+      event: 'search',
+      properties: { username: inputText },
+    });
+    await posthog.shutdown();
+  } else if (buttonValue === 'mine') {
+    await posthog.capture({
+      distinctId: fid.toString(),
+      event: 'view_mine',
+    });
+    await posthog.shutdown();
+  } else {
+    await posthog.identify({
+      distinctId: fid.toString(),
+      properties: { fid },
+    });
+    await posthog.shutdown();
   }
 }
 
 app.frame(
   '/',
   async ({ buttonValue, inputText, frameData, deriveState, status, res }) => {
-    await capture(frameData?.fid, buttonValue, inputText);
-
     const { address } = await deriveState(async (previousState) => {
       const profile =
         status === 'initial'
@@ -183,6 +183,8 @@ app.frame(
       previousState.address = profile?.walletAddress ?? '';
       previousState.profile = compressProfile(toRenderedProfile(profile)) ?? '';
     });
+
+    await capture(frameData?.fid, buttonValue, inputText);
 
     return res({
       image: '/profile_img',
@@ -209,11 +211,80 @@ app.frame(
   },
 );
 
+app.frame('/fid/:fid', async ({ req, deriveState, frameData, res }) => {
+  const fidParam = req.param('fid');
+  const fid = fidParam ? parseInt(fidParam) : undefined;
+
+  const { address } = await deriveState(async (previousState) => {
+    const profile = await getIcebreakerbyFid(fid);
+
+    previousState.address = profile?.walletAddress ?? '';
+    previousState.profile = compressProfile(toRenderedProfile(profile)) ?? '';
+  });
+
+  await capture(frameData?.fid);
+
+  return res({
+    image: '/profile_img',
+    intents: address
+      ? [
+          <Button.Link href={`https://app.icebreaker.xyz/eth/${address}`}>
+            View
+          </Button.Link>,
+          <Button.Reset>Back</Button.Reset>,
+        ]
+      : [
+          <TextInput placeholder="Enter farcaster username..." />,
+          <Button value="search">Search</Button>,
+          <Button value="mine">View mine</Button>,
+          <Button.AddCastAction action="/add">
+            Install action
+          </Button.AddCastAction>,
+        ],
+    headers: {
+      'cache-control': 'max-age=0',
+    },
+  });
+});
+
+app.frame('/fname/:fname', async ({ req, deriveState, frameData, res }) => {
+  const fname = req.param('fname');
+
+  const { address } = await deriveState(async (previousState) => {
+    const profile = await getIcebreakerbyFname(fname);
+
+    previousState.address = profile?.walletAddress ?? '';
+    previousState.profile = compressProfile(toRenderedProfile(profile)) ?? '';
+  });
+
+  await capture(frameData?.fid, undefined, fname);
+
+  return res({
+    image: '/profile_img',
+    intents: address
+      ? [
+          <Button.Link href={`https://app.icebreaker.xyz/eth/${address}`}>
+            View
+          </Button.Link>,
+          <Button.Reset>Back</Button.Reset>,
+        ]
+      : [
+          <TextInput placeholder="Enter farcaster username..." />,
+          <Button value="search">Search</Button>,
+          <Button value="mine">View mine</Button>,
+          <Button.AddCastAction action="/add">
+            Install action
+          </Button.AddCastAction>,
+        ],
+    headers: {
+      'cache-control': 'max-age=0',
+    },
+  });
+});
+
 app.frame(
   '/cast-action',
   async ({ frameData, buttonValue, inputText, deriveState, res }) => {
-    await capture(frameData?.fid);
-
     const { address } = await deriveState(async (previousState) => {
       const profile =
         buttonValue === 'reset-search'
@@ -227,6 +298,8 @@ app.frame(
       previousState.address = profile?.walletAddress ?? '';
       previousState.profile = compressProfile(toRenderedProfile(profile)) ?? '';
     });
+
+    await capture(frameData?.fid);
 
     return res({
       image: '/profile_img',
