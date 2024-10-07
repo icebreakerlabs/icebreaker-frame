@@ -20,7 +20,7 @@ After installation, you can start the application with:
 npm run dev
 ```
 
-Navigate to `http://localhost:5174/api/dev` in your web browser to access the application.
+Navigate to `http://localhost:5173/api/dev` in your web browser to access the application.
 
 ## Contributing
 
