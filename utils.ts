@@ -14,7 +14,11 @@ export function toRenderedProfile(
   }
 
   return {
-    avatarUrl: profile.avatarUrl || '/avatar_black.png',
+    avatarUrl: profile.avatarUrl
+      ? profile.avatarUrl.endsWith('.webp')
+        ? '/avatar_black.png'
+        : profile.avatarUrl
+      : '/avatar_black.png',
     displayName: profile.displayName || truncateAddress(profile.walletAddress),
     bio: profile.bio,
     jobTitle: profile.jobTitle,
