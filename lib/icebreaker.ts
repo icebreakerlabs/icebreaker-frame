@@ -48,3 +48,23 @@ export async function getIcebreakerbyFid(fid?: number) {
 
   return response?.profiles[0];
 }
+
+export async function getIcebreakerbyEthAddress(address?: string) {
+  if (!address) {
+    return;
+  }
+
+  const response = await request<ProfileResponse>(`/eth/${address}`);
+
+  return response?.profiles[0];
+}
+
+export async function getIcebreakerbyEns(ens?: string) {
+  if (!ens) {
+    return;
+  }
+
+  const response = await request<ProfileResponse>(`/ens/${ens}`);
+
+  return response?.profiles[0];
+}

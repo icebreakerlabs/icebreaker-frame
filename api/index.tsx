@@ -5,7 +5,12 @@ import { neynar } from 'frog/hubs';
 import { handle } from 'frog/vercel';
 
 import { EXISTING_CHANNEL_ICONS } from '../constants.js';
-import { getIcebreakerbyFid, getIcebreakerbyFname } from '../lib/icebreaker.js';
+import {
+  getIcebreakerbyEns,
+  getIcebreakerbyEthAddress,
+  getIcebreakerbyFid,
+  getIcebreakerbyFname,
+} from '../lib/icebreaker.js';
 import { posthog } from '../lib/posthog.js';
 import { type RenderedProfile } from '../lib/types.js';
 import { Box, vars, Heading, HStack, VStack, Image, Text } from '../ui.js';
@@ -211,6 +216,78 @@ app.frame('/fid/:fid', async (context) => {
   const fid = +fidParam;
 
   const profile = await getIcebreakerbyFid(fid);
+
+  context.previousState.address = profile?.walletAddress ?? '';
+  context.previousState.profile =
+    compressProfile(toRenderedProfile(profile)) ?? '';
+
+  await capture(context.frameData?.fid);
+
+  return context.res({
+    image: '/profile_img',
+    intents: context.previousState.address
+      ? [
+          <Button.Link
+            href={`https://app.icebreaker.xyz/eth/${context.previousState.address}`}
+          >
+            View
+          </Button.Link>,
+          <Button.Reset>Back</Button.Reset>,
+        ]
+      : [
+          <TextInput placeholder="Enter farcaster username..." />,
+          <Button value="search">Search</Button>,
+          <Button value="mine">View mine</Button>,
+          <Button.AddCastAction action="/add">
+            Install action
+          </Button.AddCastAction>,
+        ],
+    headers: {
+      'cache-control': 'no-cache, no-store',
+    },
+  });
+});
+
+app.frame('/eth/:ethAddress', async (context) => {
+  const { ethAddress } = context.req.param();
+
+  const profile = await getIcebreakerbyEthAddress(ethAddress);
+
+  context.previousState.address = profile?.walletAddress ?? '';
+  context.previousState.profile =
+    compressProfile(toRenderedProfile(profile)) ?? '';
+
+  await capture(context.frameData?.fid);
+
+  return context.res({
+    image: '/profile_img',
+    intents: context.previousState.address
+      ? [
+          <Button.Link
+            href={`https://app.icebreaker.xyz/eth/${context.previousState.address}`}
+          >
+            View
+          </Button.Link>,
+          <Button.Reset>Back</Button.Reset>,
+        ]
+      : [
+          <TextInput placeholder="Enter farcaster username..." />,
+          <Button value="search">Search</Button>,
+          <Button value="mine">View mine</Button>,
+          <Button.AddCastAction action="/add">
+            Install action
+          </Button.AddCastAction>,
+        ],
+    headers: {
+      'cache-control': 'no-cache, no-store',
+    },
+  });
+});
+
+app.frame('/ens/:ens', async (context) => {
+  const { ens } = context.req.param();
+
+  const profile = await getIcebreakerbyEns(ens);
 
   context.previousState.address = profile?.walletAddress ?? '';
   context.previousState.profile =
