@@ -4,6 +4,7 @@ export type Channel = {
   isLocked?: boolean;
   value?: string;
   url?: string;
+  metadata?: { name: string; value: string }[];
 };
 
 export type Credential = {

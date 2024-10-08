@@ -4,7 +4,11 @@ import { serveStatic } from 'frog/serve-static';
 import { neynar } from 'frog/hubs';
 import { handle } from 'frog/vercel';
 
-import { EXISTING_CHANNEL_ICONS } from '../constants.js';
+import {
+  APP_URL,
+  EXISTING_CHANNEL_ICONS,
+  NEYNAR_API_KEY,
+} from '../constants.js';
 import { getIcebreakerbyFid, getIcebreakerbyFname } from '../lib/icebreaker.js';
 import { posthog } from '../lib/posthog.js';
 import { type RenderedProfile } from '../lib/types.js';
@@ -12,14 +16,12 @@ import { Box, vars, Heading, HStack, VStack, Image, Text } from '../ui.js';
 import {
   compressProfile,
   decompressProfile,
+  getFIDFromChannels,
   toRenderedProfile,
 } from '../utils.js';
 
-const NEYNAR_API_KEY = process.env.NEYNAR_API_KEY!;
-
 type FrogEnv = {
   State: {
-    address: string | undefined;
     profile: string | undefined;
   };
 };
@@ -31,7 +33,6 @@ export const app = new Frog<FrogEnv>({
   hub: neynar({ apiKey: NEYNAR_API_KEY }),
   title: 'Icebreaker Lookup Frame',
   initialState: {
-    address: undefined,
     profile: undefined,
   },
   headers: {
@@ -199,21 +200,18 @@ app.frame('/fname/:fname', async (context) => {
 
   const profile = await getIcebreakerbyFname(fname);
 
-  context.previousState.address = profile?.walletAddress ?? '';
+  await capture(context.frameData?.fid, undefined, fname);
+
+  const fid = getFIDFromChannels(profile?.channels);
+
   context.previousState.profile =
     compressProfile(toRenderedProfile(profile)) ?? '';
 
-  await capture(context.frameData?.fid, undefined, fname);
-
   return context.res({
     image: '/profile_img',
-    intents: context.previousState.address
+    intents: fid
       ? [
-          <Button.Link
-            href={`https://app.icebreaker.xyz/eth/${context.previousState.address}`}
-          >
-            View
-          </Button.Link>,
+          <Button.Link href={`${APP_URL}/fid/${fid}`}>View</Button.Link>,
           <Button.Reset>Back</Button.Reset>,
         ]
       : [
@@ -232,25 +230,21 @@ app.frame('/fname/:fname', async (context) => {
 
 app.frame('/fid/:fid', async (context) => {
   const { fid: fidParam } = context.req.param();
-  const fid = +fidParam;
 
-  const profile = await getIcebreakerbyFid(fid);
-
-  context.previousState.address = profile?.walletAddress ?? '';
-  context.previousState.profile =
-    compressProfile(toRenderedProfile(profile)) ?? '';
+  const profile = await getIcebreakerbyFid(+fidParam);
 
   await capture(context.frameData?.fid);
 
+  const fid = getFIDFromChannels(profile?.channels) || fidParam;
+
+  context.previousState.profile =
+    compressProfile(toRenderedProfile(profile)) ?? '';
+
   return context.res({
     image: '/profile_img',
-    intents: context.previousState.address
+    intents: fid
       ? [
-          <Button.Link
-            href={`https://app.icebreaker.xyz/eth/${context.previousState.address}`}
-          >
-            View
-          </Button.Link>,
+          <Button.Link href={`${APP_URL}/fid/${fid}`}>View</Button.Link>,
           <Button.Reset>Back</Button.Reset>,
         ]
       : [
@@ -277,22 +271,19 @@ app.frame('/', async (context) => {
           ? await getIcebreakerbyFname(context.inputText)
           : undefined;
 
-  context.previousState.address = profile?.walletAddress ?? '';
+  await capture(context.frameData?.fid, context.buttonValue, context.inputText);
+
+  const fid = getFIDFromChannels(profile?.channels);
+
   context.previousState.profile =
     compressProfile(toRenderedProfile(profile)) ?? '';
-
-  await capture(context.frameData?.fid, context.buttonValue, context.inputText);
 
   return context.res({
     image: '/profile_img',
     intents:
-      context.previousState.address && context.status !== 'initial'
+      fid && context.status !== 'initial'
         ? [
-            <Button.Link
-              href={`https://app.icebreaker.xyz/eth/${context.previousState.address}`}
-            >
-              View
-            </Button.Link>,
+            <Button.Link href={`${APP_URL}/fid/${fid}`}>View</Button.Link>,
             <Button.Reset>Back</Button.Reset>,
           ]
         : [
@@ -319,22 +310,19 @@ app.frame('/cast-action', async (context) => {
           ? await getIcebreakerbyFname(context.inputText)
           : await getIcebreakerbyFid(context.frameData?.castId.fid);
 
-  context.previousState.address = profile?.walletAddress ?? '';
+  await capture(context.frameData?.fid);
+
+  const fid = getFIDFromChannels(profile?.channels);
+
   context.previousState.profile =
     compressProfile(toRenderedProfile(profile)) ?? '';
-
-  await capture(context.frameData?.fid);
 
   return context.res({
     image: '/profile_img',
     intents:
-      context.previousState.address && context.buttonValue !== 'reset-search'
+      fid && context.buttonValue !== 'reset-search'
         ? [
-            <Button.Link
-              href={`https://app.icebreaker.xyz/eth/${context.previousState.address}`}
-            >
-              View
-            </Button.Link>,
+            <Button.Link href={`${APP_URL}/fid/${fid}`}>View</Button.Link>,
             <Button value="reset-search">Back</Button>,
           ]
         : [

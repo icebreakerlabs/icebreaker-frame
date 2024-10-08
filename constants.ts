@@ -1,3 +1,5 @@
+export const NEYNAR_API_KEY = process.env.NEYNAR_API_KEY!;
+
 export const EXISTING_CHANNEL_ICONS = [
   'calendar',
   'ens',
@@ -9,3 +11,5 @@ export const EXISTING_CHANNEL_ICONS = [
   'twitter',
   'wallet',
 ];
+
+export const APP_URL = 'https://app.icebreaker.xyz';

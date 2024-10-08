@@ -1,6 +1,7 @@
+import { APP_URL } from '../constants.js';
 import { type IcebreakerProfile } from './types.js';
 
-const API_URL = 'https://app.icebreaker.xyz/api/v1';
+const API_URL = `${APP_URL}/api/v1`;
 
 async function request<T>(path: string, options?: RequestInit) {
   try {

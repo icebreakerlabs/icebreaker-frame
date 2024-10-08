@@ -1,6 +1,10 @@
 import { inflateSync, deflateSync } from 'node:zlib';
 
-import { type RenderedProfile, type IcebreakerProfile } from './lib/types.js';
+import {
+  type RenderedProfile,
+  type IcebreakerProfile,
+  type Channel,
+} from './lib/types.js';
 
 export function truncateAddress(address: string | undefined) {
   return address?.replace(address.slice(6, -4), '...') ?? '';
@@ -64,4 +68,11 @@ export function decompressProfile(
   } catch {
     return;
   }
+}
+
+export function getFIDFromChannels(channels?: Channel[]) {
+  return channels
+    ?.find(({ type }) => type === 'farcaster')
+    ?.metadata?.find(({ name }) => name === 'fid')
+    ?.value.toString();
 }
