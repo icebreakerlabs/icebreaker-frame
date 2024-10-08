@@ -6,6 +6,9 @@ export function truncateAddress(address: string | undefined) {
   return address?.replace(address.slice(6, -4), '...') ?? '';
 }
 
+const PROTOCOL_MATCHER = /(^\w+:|^)\/\//;
+const TRAILING_SLASH = /\/$/;
+
 export function toRenderedProfile(
   profile?: IcebreakerProfile,
 ): RenderedProfile | undefined {
@@ -29,6 +32,12 @@ export function toRenderedProfile(
     verifiedChannels:
       profile.channels?.flatMap(({ isVerified, type }) =>
         isVerified ? type : [],
+      ) ?? [],
+    verifiedCompanies:
+      profile.workExperience?.flatMap(({ isVerified, orgWebsite }) =>
+        isVerified && orgWebsite
+          ? orgWebsite.replace(PROTOCOL_MATCHER, '').replace(TRAILING_SLASH, '')
+          : [],
       ) ?? [],
   };
 }
