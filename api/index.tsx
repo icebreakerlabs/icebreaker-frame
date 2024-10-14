@@ -1,4 +1,4 @@
-import { Button, Frog, TextInput } from 'frog';
+import { Button, type FrameContext, Frog, TextInput } from 'frog';
 import { devtools } from 'frog/dev';
 import { serveStatic } from 'frog/serve-static';
 import { neynar } from 'frog/hubs';
@@ -11,7 +11,7 @@ import {
 } from '../constants.js';
 import { getIcebreakerbyFid, getIcebreakerbyFname } from '../lib/icebreaker.js';
 import { posthog } from '../lib/posthog.js';
-import { type RenderedProfile } from '../lib/types.js';
+import { type IcebreakerProfile, type RenderedProfile } from '../lib/types.js';
 import { Box, vars, Heading, HStack, VStack, Image, Text } from '../ui.js';
 import {
   compressProfile,
@@ -37,6 +37,11 @@ export const app = new Frog<FrogEnv>({
   },
   headers: {
     'cache-control': 'no-cache, no-store',
+  },
+  imageOptions: {
+    headers: {
+      'cache-control': 'no-cache, no-store',
+    },
   },
 });
 
@@ -195,122 +200,11 @@ async function capture(fid?: number, buttonValue?: string, inputText?: string) {
   }
 }
 
-app.frame('/fname/:fname', async (context) => {
-  const { fname } = context.req.param();
-
-  const profile = await getIcebreakerbyFname(fname);
-
-  await capture(context.frameData?.fid, undefined, fname);
-
-  const fid = getFIDFromChannels(profile?.channels);
-
-  context.previousState.profile =
-    compressProfile(toRenderedProfile(profile)) ?? '';
-
-  return context.res({
-    image: '/profile_img',
-    intents: fid
-      ? [
-          <Button.Link href={`${APP_URL}/fid/${fid}`}>View</Button.Link>,
-          <Button.Reset>Back</Button.Reset>,
-        ]
-      : [
-          <TextInput placeholder="Enter farcaster username..." />,
-          <Button value="search">Search</Button>,
-          <Button value="mine">View mine</Button>,
-          <Button.AddCastAction action="/add">
-            Install action
-          </Button.AddCastAction>,
-        ],
-    headers: {
-      'cache-control': 'no-cache, no-store',
-    },
-  });
-});
-
-app.frame('/fid/:fid', async (context) => {
-  const { fid: fidParam } = context.req.param();
-
-  const profile = await getIcebreakerbyFid(+fidParam);
-
-  await capture(context.frameData?.fid);
-
-  const fid = getFIDFromChannels(profile?.channels) || fidParam;
-
-  context.previousState.profile =
-    compressProfile(toRenderedProfile(profile)) ?? '';
-
-  return context.res({
-    image: '/profile_img',
-    intents: fid
-      ? [
-          <Button.Link href={`${APP_URL}/fid/${fid}`}>View</Button.Link>,
-          <Button.Reset>Back</Button.Reset>,
-        ]
-      : [
-          <TextInput placeholder="Enter farcaster username..." />,
-          <Button value="search">Search</Button>,
-          <Button value="mine">View mine</Button>,
-          <Button.AddCastAction action="/add">
-            Install action
-          </Button.AddCastAction>,
-        ],
-    headers: {
-      'cache-control': 'no-cache, no-store',
-    },
-  });
-});
-
-app.frame('/', async (context) => {
-  const profile =
-    context.status === 'initial'
-      ? undefined
-      : context.buttonValue === 'mine'
-        ? await getIcebreakerbyFid(context.frameData?.fid)
-        : context.inputText
-          ? await getIcebreakerbyFname(context.inputText)
-          : undefined;
-
+async function render(
+  context: FrameContext<FrogEnv>,
+  profile?: IcebreakerProfile,
+) {
   await capture(context.frameData?.fid, context.buttonValue, context.inputText);
-
-  const fid = getFIDFromChannels(profile?.channels);
-
-  context.previousState.profile =
-    compressProfile(toRenderedProfile(profile)) ?? '';
-
-  return context.res({
-    image: '/profile_img',
-    intents:
-      fid && context.status !== 'initial'
-        ? [
-            <Button.Link href={`${APP_URL}/fid/${fid}`}>View</Button.Link>,
-            <Button.Reset>Back</Button.Reset>,
-          ]
-        : [
-            <TextInput placeholder="Enter farcaster username..." />,
-            <Button value="search">Search</Button>,
-            <Button value="mine">View mine</Button>,
-            <Button.AddCastAction action="/add">
-              Install action
-            </Button.AddCastAction>,
-          ],
-    headers: {
-      'cache-control': 'no-cache, no-store',
-    },
-  });
-});
-
-app.frame('/cast-action', async (context) => {
-  const profile =
-    context.buttonValue === 'reset-search'
-      ? undefined
-      : context.buttonValue === 'mine'
-        ? await getIcebreakerbyFid(context.frameData?.fid)
-        : context.inputText
-          ? await getIcebreakerbyFname(context.inputText)
-          : await getIcebreakerbyFid(context.frameData?.castId.fid);
-
-  await capture(context.frameData?.fid);
 
   const fid = getFIDFromChannels(profile?.channels);
 
@@ -329,11 +223,70 @@ app.frame('/cast-action', async (context) => {
             <TextInput placeholder="Enter farcaster username..." />,
             <Button value="search">Search</Button>,
             <Button value="mine">View mine</Button>,
+            <Button.AddCastAction action="/add">
+              Install action
+            </Button.AddCastAction>,
           ],
     headers: {
       'cache-control': 'no-cache, no-store',
     },
   });
+}
+
+app.frame('/fname/:fname', async (context) => {
+  const { fname } = context.req.param();
+
+  const profile =
+    context.buttonValue === 'reset-search'
+      ? undefined
+      : context.buttonValue === 'mine'
+        ? await getIcebreakerbyFid(context.frameData?.fid)
+        : context.inputText
+          ? await getIcebreakerbyFname(context.inputText)
+          : await getIcebreakerbyFname(fname);
+
+  return render(context, profile);
+});
+
+app.frame('/fid/:fid', async (context) => {
+  const { fid: fidParam } = context.req.param();
+
+  const profile =
+    context.buttonValue === 'reset-search'
+      ? undefined
+      : context.buttonValue === 'mine'
+        ? await getIcebreakerbyFid(context.frameData?.fid)
+        : context.inputText
+          ? await getIcebreakerbyFname(context.inputText)
+          : await getIcebreakerbyFid(+fidParam);
+
+  return render(context, profile);
+});
+
+app.frame('/', async (context) => {
+  const profile =
+    context.buttonValue === 'reset-search'
+      ? undefined
+      : context.buttonValue === 'mine'
+        ? await getIcebreakerbyFid(context.frameData?.fid)
+        : context.inputText
+          ? await getIcebreakerbyFname(context.inputText)
+          : undefined;
+
+  return render(context, profile);
+});
+
+app.frame('/cast-action', async (context) => {
+  const profile =
+    context.buttonValue === 'reset-search'
+      ? undefined
+      : context.buttonValue === 'mine'
+        ? await getIcebreakerbyFid(context.frameData?.fid)
+        : context.inputText
+          ? await getIcebreakerbyFname(context.inputText)
+          : await getIcebreakerbyFid(context.frameData?.castId.fid);
+
+  return render(context, profile);
 });
 
 app.castAction(
@@ -364,6 +317,9 @@ app.image('/profile_img', async (context) => {
         <Image src="/image.png" />
       </Box>
     ),
+    headers: {
+      'cache-control': 'no-cache, no-store',
+    },
     imageOptions: {
       headers: {
         'cache-control': 'no-cache, no-store',
