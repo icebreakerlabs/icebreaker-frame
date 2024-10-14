@@ -211,12 +211,20 @@ async function render(
   context.previousState.profile =
     compressProfile(toRenderedProfile(profile)) ?? '';
 
+  const url = fid
+    ? encodeURIComponent(`https://frame.icebreaker.xyz/api/composer/${fid}`)
+    : undefined;
+
   return context.res({
     image: '/profile_img',
     intents:
       fid && context.buttonValue !== 'reset-search'
         ? [
-            <Button.Link href={`${APP_URL}/fid/${fid}`}>View</Button.Link>,
+            <Button.Link
+              href={`https://warpcast.com/?composerActionURL=${url}`}
+            >
+              View
+            </Button.Link>,
             <Button value="reset-search">Back</Button>,
           ]
         : [
@@ -301,6 +309,26 @@ app.castAction(
   {
     name: 'Icebreaker Lookup',
     icon: 'search',
+  },
+);
+
+app.composerAction(
+  '/composer/:fid',
+  (context) => {
+    const { fid } = context.req.param();
+
+    console.log(`Composer Action to ${fid} from ${context.actionData.fid}`);
+
+    return context.res({
+      title: 'View Icebreaker',
+      url: `${APP_URL}/fid/${fid}`,
+    });
+  },
+  {
+    name: 'View Icebreaker',
+    description: 'View Icebreaker profile',
+    icon: 'image',
+    imageUrl: '/avatar_black.png',
   },
 );
 
