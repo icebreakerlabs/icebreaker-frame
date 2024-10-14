@@ -225,6 +225,9 @@ async function render(
             >
               View
             </Button.Link>,
+            <Button.Link href={`${APP_URL}/fid/${fid}`}>
+              View on Icebreaker
+            </Button.Link>,
             <Button value="reset-search">Back</Button>,
           ]
         : [
@@ -327,7 +330,7 @@ app.composerAction(
   {
     name: 'View Icebreaker',
     description: 'View Icebreaker profile',
-    icon: 'image',
+    icon: 'search',
     imageUrl: '/avatar_black.png',
   },
 );
