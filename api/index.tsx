@@ -1,4 +1,11 @@
-import { Button, type FrameContext, Frog, TextInput } from 'frog';
+import {
+  Button,
+  CastActionContext,
+  ComposerActionContext,
+  type FrameContext,
+  Frog,
+  TextInput,
+} from 'frog';
 import { devtools } from 'frog/dev';
 import { serveStatic } from 'frog/serve-static';
 import { neynar } from 'frog/hubs';
@@ -26,6 +33,11 @@ type FrogEnv = {
     profile: string | undefined;
   };
 };
+
+type Context =
+  | FrameContext<FrogEnv>
+  | CastActionContext<FrogEnv>
+  | ComposerActionContext<FrogEnv>;
 
 export const app = new Frog<FrogEnv>({
   ui: { vars },
@@ -174,39 +186,53 @@ function Profile({
   );
 }
 
-async function capture(fid?: number, buttonValue?: string, inputText?: string) {
-  if (!fid) {
+async function capture(
+  context: Context,
+  { fid, fname }: { fid?: number; fname?: string } = {},
+) {
+  const viewerFID =
+    'frameData' in context
+      ? context.frameData?.fid
+      : 'actionData' in context
+        ? context.actionData.fid
+        : undefined;
+
+  if (!viewerFID) {
     return;
   }
 
-  if (inputText) {
+  if ('inputText' in context && context.inputText) {
     await posthog.capture({
-      distinctId: fid.toString(),
+      distinctId: viewerFID.toString(),
       event: 'search',
-      properties: { username: inputText },
+      properties: { username: context.inputText },
     });
-    await posthog.shutdown();
-  } else if (buttonValue === 'mine') {
+  } else if ('buttonValue' in context && context.buttonValue === 'mine') {
     await posthog.capture({
-      distinctId: fid.toString(),
+      distinctId: viewerFID.toString(),
       event: 'view_mine',
     });
-    await posthog.shutdown();
-  } else {
-    await posthog.identify({
-      distinctId: fid.toString(),
+  } else if (fname) {
+    await posthog.capture({
+      distinctId: viewerFID.toString(),
+      event: 'view',
+      properties: { username: fname },
+    });
+  } else if (fid) {
+    await posthog.capture({
+      distinctId: viewerFID.toString(),
+      event: 'view',
       properties: { fid },
     });
-    await posthog.shutdown();
   }
+
+  await posthog.shutdown();
 }
 
 async function render(
   context: FrameContext<FrogEnv>,
   profile?: IcebreakerProfile,
 ) {
-  await capture(context.frameData?.fid, context.buttonValue, context.inputText);
-
   const fid = getFIDFromChannels(profile?.channels);
 
   context.previousState.profile =
@@ -227,7 +253,7 @@ async function render(
               View
             </Button.Link>,
             <Button.Link href={`${APP_URL}/fid/${fid}`}>
-              Open on Icebreaker
+              Icebreaker
             </Button.Link>,
             <Button value="reset-search">Back</Button>,
           ]
@@ -245,58 +271,66 @@ async function render(
   });
 }
 
+function getIcebreaker(
+  context: Context,
+  { fid, fname }: { fid?: number; fname?: string } = {},
+) {
+  const buttonValue =
+    'buttonValue' in context ? context.buttonValue : undefined;
+  const inputText = 'inputText' in context ? context.inputText : undefined;
+  const frameData = 'frameData' in context ? context.frameData : undefined;
+
+  if (buttonValue === 'reset-search') {
+    return;
+  }
+  if (buttonValue === 'mine') {
+    return getIcebreakerbyFid(frameData?.fid);
+  }
+  if (inputText) {
+    return getIcebreakerbyFname(inputText);
+  }
+  if (fname) {
+    return getIcebreakerbyFname(fname);
+  }
+  if (fid) {
+    return getIcebreakerbyFid(fid);
+  }
+}
+
 app.frame('/fname/:fname', async (context) => {
   const { fname } = context.req.param();
 
-  const profile =
-    context.buttonValue === 'reset-search'
-      ? undefined
-      : context.buttonValue === 'mine'
-        ? await getIcebreakerbyFid(context.frameData?.fid)
-        : context.inputText
-          ? await getIcebreakerbyFname(context.inputText)
-          : await getIcebreakerbyFname(fname);
+  await capture(context, { fname });
+
+  const profile = await getIcebreaker(context, { fname });
 
   return render(context, profile);
 });
 
 app.frame('/fid/:fid', async (context) => {
-  const { fid: fidParam } = context.req.param();
+  const fid = +context.req.param().fid;
 
-  const profile =
-    context.buttonValue === 'reset-search'
-      ? undefined
-      : context.buttonValue === 'mine'
-        ? await getIcebreakerbyFid(context.frameData?.fid)
-        : context.inputText
-          ? await getIcebreakerbyFname(context.inputText)
-          : await getIcebreakerbyFid(+fidParam);
+  await capture(context, { fid });
+
+  const profile = await getIcebreaker(context, { fid });
 
   return render(context, profile);
 });
 
 app.frame('/', async (context) => {
-  const profile =
-    context.buttonValue === 'reset-search'
-      ? undefined
-      : context.buttonValue === 'mine'
-        ? await getIcebreakerbyFid(context.frameData?.fid)
-        : context.inputText
-          ? await getIcebreakerbyFname(context.inputText)
-          : undefined;
+  await capture(context);
+
+  const profile = await getIcebreaker(context);
 
   return render(context, profile);
 });
 
 app.frame('/cast-action', async (context) => {
-  const profile =
-    context.buttonValue === 'reset-search'
-      ? undefined
-      : context.buttonValue === 'mine'
-        ? await getIcebreakerbyFid(context.frameData?.fid)
-        : context.inputText
-          ? await getIcebreakerbyFname(context.inputText)
-          : await getIcebreakerbyFid(context.frameData?.castId.fid);
+  const fid = context.frameData?.castId.fid;
+
+  await capture(context, { fid });
+
+  const profile = await getIcebreaker(context, { fid });
 
   return render(context, profile);
 });
@@ -318,10 +352,12 @@ app.castAction(
 
 app.composerAction(
   '/composer/:fid',
-  (context) => {
-    const { fid } = context.req.param();
+  async (context) => {
+    const fid = +context.req.param().fid;
 
     console.log(`Composer Action to ${fid} from ${context.actionData.fid}`);
+
+    await capture(context, { fid });
 
     return context.res({
       title: 'View Icebreaker',
@@ -329,10 +365,10 @@ app.composerAction(
     });
   },
   {
-    name: 'View Icebreaker',
+    name: 'Icebreaker',
     description: 'View Icebreaker',
     icon: 'search',
-    imageUrl: `${FRAME_URL}/avatar_black.png`,
+    imageUrl: `${APP_URL}/icon-256x256.png`,
   },
 );
 
