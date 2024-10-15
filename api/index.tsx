@@ -7,6 +7,7 @@ import { handle } from 'frog/vercel';
 import {
   APP_URL,
   EXISTING_CHANNEL_ICONS,
+  FRAME_URL,
   NEYNAR_API_KEY,
 } from '../constants.js';
 import { getIcebreakerbyFid, getIcebreakerbyFname } from '../lib/icebreaker.js';
@@ -212,7 +213,7 @@ async function render(
     compressProfile(toRenderedProfile(profile)) ?? '';
 
   const url = fid
-    ? encodeURIComponent(`https://frame.icebreaker.xyz/api/composer/${fid}`)
+    ? encodeURIComponent(`${FRAME_URL}/api/composer/${fid}`)
     : undefined;
 
   return context.res({
@@ -221,12 +222,12 @@ async function render(
       fid && context.buttonValue !== 'reset-search'
         ? [
             <Button.Link
-              href={`https://warpcast.com/?composerActionURL=${url}`}
+              href={`https://warpcast.com/~/composer-action?url=${url}`}
             >
               View
             </Button.Link>,
             <Button.Link href={`${APP_URL}/fid/${fid}`}>
-              View on Icebreaker
+              Open on Icebreaker
             </Button.Link>,
             <Button value="reset-search">Back</Button>,
           ]
@@ -329,9 +330,9 @@ app.composerAction(
   },
   {
     name: 'View Icebreaker',
-    description: 'View Icebreaker profile',
+    description: 'View Icebreaker',
     icon: 'search',
-    imageUrl: '/avatar_black.png',
+    imageUrl: `${FRAME_URL}/avatar_black.png`,
   },
 );
 
