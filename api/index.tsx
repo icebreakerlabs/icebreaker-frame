@@ -239,7 +239,7 @@ async function render(
     compressProfile(toRenderedProfile(profile)) ?? '';
 
   const url = fid
-    ? encodeURIComponent(`${FRAME_URL}/api/composer/${fid}`)
+    ? encodeURIComponent(`${FRAME_URL}/api/compose/${fid}`)
     : undefined;
 
   return context.res({
@@ -351,7 +351,7 @@ app.castAction(
 );
 
 app.composerAction(
-  '/composer/:fid',
+  '/compose/:fid',
   async (context) => {
     const fid = +context.req.param().fid;
 
