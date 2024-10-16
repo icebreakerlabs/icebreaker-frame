@@ -351,9 +351,18 @@ app.castAction(
 );
 
 app.composerAction(
-  '/compose/:fid',
+  '/composer',
   async (context) => {
-    const fid = +context.req.param().fid;
+    const fidParam = context.req.query().fid;
+
+    if (!fidParam) {
+      return context.error({
+        message: 'FID is required',
+        statusCode: 400,
+      });
+    }
+
+    const fid = +fidParam;
 
     console.log(`Composer Action to ${fid} from ${context.actionData.fid}`);
 
