@@ -239,7 +239,7 @@ async function render(
     compressProfile(toRenderedProfile(profile)) ?? '';
 
   const url = fid
-    ? encodeURIComponent(`${FRAME_URL}/api/compose/${fid}`)
+    ? encodeURIComponent(`${FRAME_URL}/api/composer?fid=${fid}`)
     : undefined;
 
   return context.res({
