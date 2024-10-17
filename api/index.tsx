@@ -49,11 +49,11 @@ export const app = new Frog<FrogEnv>({
     profile: undefined,
   },
   headers: {
-    'cache-control': 'no-cache, no-store',
+    'cache-control': 'no-cache, no-store, max-age=0',
   },
   imageOptions: {
     headers: {
-      'cache-control': 'no-cache, no-store',
+      'cache-control': 'no-cache, no-store, max-age=0',
     },
   },
 });
@@ -229,18 +229,14 @@ async function capture(
   await posthog.shutdown();
 }
 
-async function render(
-  context: FrameContext<FrogEnv>,
-  profile?: IcebreakerProfile,
-) {
+function render(context: FrameContext<FrogEnv>, profile?: IcebreakerProfile) {
   const fid = getFIDFromChannels(profile?.channels);
-
-  context.previousState.profile =
-    compressProfile(toRenderedProfile(profile)) ?? '';
-
   const url = fid
     ? encodeURIComponent(`${FRAME_URL}/api/composer?fid=${fid}`)
     : undefined;
+
+  context.previousState.profile =
+    compressProfile(toRenderedProfile(profile)) ?? '';
 
   return context.res({
     image: '/profile_img',
@@ -266,7 +262,7 @@ async function render(
             </Button.AddCastAction>,
           ],
     headers: {
-      'cache-control': 'no-cache, no-store',
+      'cache-control': 'no-cache, no-store, max-age=0',
     },
   });
 }
@@ -395,11 +391,11 @@ app.image('/profile_img', async (context) => {
       </Box>
     ),
     headers: {
-      'cache-control': 'no-cache, no-store',
+      'cache-control': 'no-cache, no-store, max-age=0',
     },
     imageOptions: {
       headers: {
-        'cache-control': 'no-cache, no-store',
+        'cache-control': 'no-cache, no-store, max-age=0',
       },
     },
   });
