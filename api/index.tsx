@@ -238,29 +238,30 @@ function render(context: FrameContext<FrogEnv>, profile?: IcebreakerProfile) {
   context.previousState.profile =
     compressProfile(toRenderedProfile(profile)) ?? '';
 
+  if (fid && profile && context.buttonValue !== 'reset-search') {
+    return context.res({
+      image: `/profile/${fid}`,
+      intents: [
+        <Button.Link href={`https://warpcast.com/~/composer-action?url=${url}`}>
+          View
+        </Button.Link>,
+        <Button.Link href={`${APP_URL}/fid/${fid}`}>Icebreaker</Button.Link>,
+        <Button value="reset-search">Back</Button>,
+      ],
+      headers: {
+        'cache-control': 'no-cache, no-store, max-age=0',
+      },
+    });
+  }
+
   return context.res({
-    image: '/profile_img',
-    intents:
-      fid && context.buttonValue !== 'reset-search'
-        ? [
-            <Button.Link
-              href={`https://warpcast.com/~/composer-action?url=${url}`}
-            >
-              View
-            </Button.Link>,
-            <Button.Link href={`${APP_URL}/fid/${fid}`}>
-              Icebreaker
-            </Button.Link>,
-            <Button value="reset-search">Back</Button>,
-          ]
-        : [
-            <TextInput placeholder="Enter farcaster username..." />,
-            <Button value="search">Search</Button>,
-            <Button value="mine">View mine</Button>,
-            <Button.AddCastAction action="/add">
-              Install action
-            </Button.AddCastAction>,
-          ],
+    image: '/default',
+    intents: [
+      <TextInput placeholder="Enter farcaster username..." />,
+      <Button value="search">Search</Button>,
+      <Button value="mine">View mine</Button>,
+      <Button.AddCastAction action="/add">Install action</Button.AddCastAction>,
+    ],
     headers: {
       'cache-control': 'no-cache, no-store, max-age=0',
     },
@@ -377,7 +378,25 @@ app.composerAction(
   },
 );
 
-app.image('/profile_img', async (context) => {
+app.image('/default', async (context) => {
+  return context.res({
+    image: (
+      <Box grow backgroundColor="background">
+        <Image src="/image.png" />
+      </Box>
+    ),
+    headers: {
+      'cache-control': 'no-cache, no-store, max-age=0',
+    },
+    imageOptions: {
+      headers: {
+        'cache-control': 'no-cache, no-store, max-age=0',
+      },
+    },
+  });
+});
+
+app.image('/profile/:fid', async (context) => {
   const renderedProfile = decompressProfile(context.previousState.profile);
 
   return context.res({
