@@ -294,6 +294,14 @@ function getIcebreaker(
   }
 }
 
+app.frame('/', async (context) => {
+  await capture(context);
+
+  const profile = await getIcebreaker(context);
+
+  return render(context, profile);
+});
+
 app.frame('/fname/:fname', async (context) => {
   const { fname } = context.req.param();
 
@@ -310,14 +318,6 @@ app.frame('/fid/:fid', async (context) => {
   await capture(context, { fid });
 
   const profile = await getIcebreaker(context, { fid });
-
-  return render(context, profile);
-});
-
-app.frame('/', async (context) => {
-  await capture(context);
-
-  const profile = await getIcebreaker(context);
 
   return render(context, profile);
 });

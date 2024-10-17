@@ -5,6 +5,7 @@ import {
   type IcebreakerProfile,
   type Channel,
 } from './lib/types.js';
+import { CLOUDINARY_AVATAR_URL } from './constants.js';
 
 export function truncateAddress(address: string | undefined) {
   return address?.replace(address.slice(6, -4), '...') ?? '';
@@ -12,6 +13,21 @@ export function truncateAddress(address: string | undefined) {
 
 const PROTOCOL_MATCHER = /(^\w+:|^)\/\//;
 const TRAILING_SLASH = /\/$/;
+const CLOUDINARY_AVATAR_MATCHER =
+  /^https:\/\/res\.cloudinary\.com\/merkle-manufactory\/image\/fetch\/.*?\//;
+
+export function sanitizeAvatarURL(url?: string) {
+  if (!url) {
+    return url;
+  }
+
+  // Cloudinary URLs are broken
+  if (url.startsWith(CLOUDINARY_AVATAR_URL)) {
+    return decodeURIComponent(url.replace(CLOUDINARY_AVATAR_MATCHER, ''));
+  }
+
+  return url;
+}
 
 export function toRenderedProfile(
   profile?: IcebreakerProfile,
@@ -24,7 +40,7 @@ export function toRenderedProfile(
     avatarUrl: profile.avatarUrl
       ? profile.avatarUrl.endsWith('.webp')
         ? '/avatar_black.png'
-        : profile.avatarUrl
+        : (sanitizeAvatarURL(profile.avatarUrl) as string)
       : '/avatar_black.png',
     displayName: profile.displayName || truncateAddress(profile.walletAddress),
     bio: profile.bio,

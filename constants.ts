@@ -19,3 +19,6 @@ export const PORT = process.env.PORT ? +process.env.PORT : 5173;
 export const FRAME_URL = process.env.VERCEL_PROJECT_PRODUCTION_URL
   ? `https://${process.env.VERCEL_PROJECT_PRODUCTION_URL}`
   : `http://localhost:${PORT}`;
+
+export const CLOUDINARY_AVATAR_URL =
+  'https://res.cloudinary.com/merkle-manufactory';
