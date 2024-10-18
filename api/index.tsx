@@ -396,6 +396,30 @@ app.image('/default', async (context) => {
   });
 });
 
+app.image('/profile_img', async (context) => {
+  const renderedProfile = decompressProfile(context.previousState.profile);
+
+  return context.res({
+    image: renderedProfile ? (
+      <Box grow backgroundColor="background" padding="20">
+        <Profile {...renderedProfile} />
+      </Box>
+    ) : (
+      <Box grow backgroundColor="background">
+        <Image src="/image.png" />
+      </Box>
+    ),
+    headers: {
+      'cache-control': 'no-cache, no-store, max-age=0',
+    },
+    imageOptions: {
+      headers: {
+        'cache-control': 'no-cache, no-store, max-age=0',
+      },
+    },
+  });
+});
+
 app.image('/profile/:fid', async (context) => {
   const renderedProfile = decompressProfile(context.previousState.profile);
 
