@@ -241,6 +241,7 @@ function render(context: FrameContext<FrogEnv>, profile?: IcebreakerProfile) {
   if (fid && profile && context.buttonValue !== 'reset-search') {
     return context.res({
       image: `/profile/${fid}`,
+      browserLocation: `${APP_URL}/fid/${fid}`,
       intents: [
         <Button.Link href={`https://warpcast.com/~/composer-action?url=${url}`}>
           View
@@ -256,6 +257,7 @@ function render(context: FrameContext<FrogEnv>, profile?: IcebreakerProfile) {
 
   return context.res({
     image: '/default',
+    browserLocation: APP_URL,
     intents: [
       <TextInput placeholder="Enter farcaster username..." />,
       <Button value="search">Search</Button>,
