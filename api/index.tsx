@@ -69,6 +69,7 @@ function Profile({
   credentialsCount,
   verifiedChannels,
   verifiedCompanies,
+  highlightedCredentials,
 }: RenderedProfile) {
   return (
     <VStack gap="8" width="100%">
@@ -99,7 +100,7 @@ function Profile({
           </HStack>
         )}
 
-        {!!verifiedCompanies.length && (
+        {(!!verifiedCompanies.length || !!highlightedCredentials.length) && (
           <HStack gap="8" paddingTop="6">
             {verifiedCompanies.map((company) => (
               <HStack
@@ -117,6 +118,33 @@ function Profile({
                 alignItems="center"
               >
                 {company} <Image src="/verified.png" width="12" height="12" />
+              </HStack>
+            ))}
+            {highlightedCredentials.map((credential) => (
+              <HStack
+                background="bg-emphasized"
+                gap="4"
+                paddingBottom="4"
+                paddingTop="4"
+                paddingLeft="12"
+                paddingRight="12"
+                borderRadius="48"
+                alignSelf="flex-start"
+                fontSize="16"
+                fontWeight="900"
+                color="white"
+                alignItems="center"
+              >
+                {credential}{' '}
+                <Image
+                  src={
+                    credential === 'Feather Ice'
+                      ? '/warning.png'
+                      : '/verified.png'
+                  }
+                  width="12"
+                  height="12"
+                />
               </HStack>
             ))}
           </HStack>

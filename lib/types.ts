@@ -55,4 +55,5 @@ export type RenderedProfile = Required<
     credentialsCount: number;
     verifiedChannels: Channel['type'][];
     verifiedCompanies: string[];
+    highlightedCredentials: string[];
   };

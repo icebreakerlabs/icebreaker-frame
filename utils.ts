@@ -15,6 +15,7 @@ const PROTOCOL_MATCHER = /(^\w+:|^)\/\//;
 const TRAILING_SLASH = /\/$/;
 const CLOUDINARY_AVATAR_MATCHER =
   /^https:\/\/res\.cloudinary\.com\/merkle-manufactory\/image\/fetch\/.*?\//;
+const HIGHLIGHTED_CREDENTIALS_LIST = ['qBuilder', 'Feather Ice'];
 
 export function sanitizeAvatarURL(url?: string) {
   if (!url) {
@@ -58,6 +59,10 @@ export function toRenderedProfile(
         isVerified && orgWebsite
           ? orgWebsite.replace(PROTOCOL_MATCHER, '').replace(TRAILING_SLASH, '')
           : [],
+      ) ?? [],
+    highlightedCredentials:
+      profile.credentials?.flatMap(({ name }) =>
+        HIGHLIGHTED_CREDENTIALS_LIST.includes(name) ? name : [],
       ) ?? [],
   };
 }
