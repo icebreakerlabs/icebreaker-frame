@@ -66,7 +66,6 @@ function Profile({
   location,
   networkingStatus,
   primarySkill,
-  credentialsCount,
   verifiedChannels,
   verifiedCompanies,
   highlightedCredentials,
@@ -100,8 +99,24 @@ function Profile({
           </HStack>
         )}
 
-        {(!!verifiedCompanies.length || !!highlightedCredentials.length) && (
-          <HStack gap="8" paddingTop="6">
+        {verifiedChannels.length > 0 && (
+          <HStack gap="8">
+            {verifiedChannels.map((channelType) => (
+              <Image
+                src={
+                  EXISTING_CHANNEL_ICONS.includes(channelType)
+                    ? `/${channelType}.png`
+                    : '/unknown.png'
+                }
+                width="20"
+                height="20"
+              />
+            ))}
+          </HStack>
+        )}
+
+        {!!verifiedCompanies.length && (
+          <HStack gap="8" marginTop="6">
             {verifiedCompanies.map((company) => (
               <HStack
                 background="bg-emphasized"
@@ -120,6 +135,11 @@ function Profile({
                 {company} <Image src="/verified.png" width="12" height="12" />
               </HStack>
             ))}
+          </HStack>
+        )}
+
+        {!!highlightedCredentials.length && (
+          <HStack gap="8">
             {highlightedCredentials.map((credential) => (
               <HStack
                 background="bg-emphasized"
@@ -187,26 +207,6 @@ function Profile({
                 {primarySkill}
               </Box>
             )}
-          </HStack>
-        )}
-
-        <Text size="20" color="muted" weight="600">
-          {`${credentialsCount}`} credentials
-        </Text>
-
-        {verifiedChannels.length > 0 && (
-          <HStack gap="8">
-            {verifiedChannels.map((channelType) => (
-              <Image
-                src={
-                  EXISTING_CHANNEL_ICONS.includes(channelType)
-                    ? `/${channelType}.png`
-                    : '/unknown.png'
-                }
-                width="20"
-                height="20"
-              />
-            ))}
           </HStack>
         )}
       </VStack>

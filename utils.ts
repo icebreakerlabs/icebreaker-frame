@@ -60,10 +60,13 @@ export function toRenderedProfile(
           ? orgWebsite.replace(PROTOCOL_MATCHER, '').replace(TRAILING_SLASH, '')
           : [],
       ) ?? [],
-    highlightedCredentials:
-      profile.credentials?.flatMap(({ name }) =>
-        HIGHLIGHTED_CREDENTIALS_LIST.includes(name) ? name : [],
-      ) ?? [],
+    highlightedCredentials: [
+      ...new Set(
+        profile.credentials?.flatMap(({ name }) =>
+          HIGHLIGHTED_CREDENTIALS_LIST.includes(name) ? name : [],
+        ) ?? [],
+      ),
+    ],
   };
 }
 
