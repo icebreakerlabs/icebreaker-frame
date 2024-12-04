@@ -8,15 +8,9 @@ import {
 } from 'frog';
 import { devtools } from 'frog/dev';
 import { serveStatic } from 'frog/serve-static';
-import { neynar } from 'frog/hubs';
 import { handle } from 'frog/next';
 
-import {
-  APP_URL,
-  EXISTING_CHANNEL_ICONS,
-  FRAME_URL,
-  NEYNAR_API_KEY,
-} from '../constants.js';
+import { APP_URL, EXISTING_CHANNEL_ICONS, FRAME_URL } from '../constants.js';
 import { getIcebreakerbyFid, getIcebreakerbyFname } from '../lib/icebreaker.js';
 import { posthog } from '../lib/posthog.js';
 import { type IcebreakerProfile, type RenderedProfile } from '../lib/types.js';
@@ -43,7 +37,6 @@ export const app = new Frog<FrogEnv>({
   ui: { vars },
   basePath: '/api',
   assetsPath: '/',
-  hub: neynar({ apiKey: NEYNAR_API_KEY }),
   title: 'Icebreaker Lookup Frame',
   initialState: {
     profile: undefined,
@@ -325,6 +318,7 @@ function getIcebreaker(
 }
 
 app.frame('/', async (context) => {
+  console.log(context);
   await capture(context);
 
   const profile = await getIcebreaker(context);
