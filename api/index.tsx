@@ -307,6 +307,8 @@ function getIcebreaker(
   const inputText = 'inputText' in context ? context.inputText : undefined;
   const frameData = 'frameData' in context ? context.frameData : undefined;
 
+  console.log(frameData);
+
   if (buttonValue === 'reset-search') {
     return;
   }
