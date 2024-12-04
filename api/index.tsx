@@ -9,7 +9,7 @@ import {
 import { devtools } from 'frog/dev';
 import { serveStatic } from 'frog/serve-static';
 import { neynar } from 'frog/hubs';
-import { handle } from 'frog/vercel';
+import { handle } from 'frog/next';
 
 import {
   APP_URL,
@@ -306,8 +306,6 @@ function getIcebreaker(
     'buttonValue' in context ? context.buttonValue : undefined;
   const inputText = 'inputText' in context ? context.inputText : undefined;
   const frameData = 'frameData' in context ? context.frameData : undefined;
-
-  console.log(frameData);
 
   if (buttonValue === 'reset-search') {
     return;

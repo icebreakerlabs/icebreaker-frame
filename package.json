@@ -9,16 +9,15 @@
     "deploy": "vercel"
   },
   "dependencies": {
-    "@neynar/nodejs-sdk": "^1.58.0",
-    "frog": "^0.17.4",
     "hono": "^4.6.3",
     "posthog-node": "^4.2.0"
   },
   "devDependencies": {
     "@dotenvx/dotenvx": "^1.15.0",
+    "frog": "^0.18.2",
     "prettier": "^3.3.3",
     "tsx": "^4.7.1",
     "typescript": "^5.3.3",
-    "vercel": "^37.6.1"
+    "vercel": "^39.1.2"
   }
 }
