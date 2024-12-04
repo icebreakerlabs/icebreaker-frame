@@ -1,7 +1,7 @@
 import {
   Button,
-  CastActionContext,
-  ComposerActionContext,
+  type CastActionContext,
+  type ComposerActionContext,
   type FrameContext,
   Frog,
   TextInput,
