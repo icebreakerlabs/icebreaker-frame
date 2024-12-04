@@ -318,7 +318,6 @@ function getIcebreaker(
 }
 
 app.frame('/', async (context) => {
-  console.log(context);
   await capture(context);
 
   const profile = await getIcebreaker(context);
