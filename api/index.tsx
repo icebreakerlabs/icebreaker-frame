@@ -10,7 +10,7 @@ import { devtools } from 'frog/dev';
 import { serveStatic } from 'frog/serve-static';
 import { handle } from 'frog/next';
 
-import { APP_URL, EXISTING_CHANNEL_ICONS, FRAME_URL } from '../constants.js';
+import { APP_URL, EXISTING_CHANNEL_ICONS } from '../constants.js';
 import { getIcebreakerbyFid, getIcebreakerbyFname } from '../lib/icebreaker.js';
 import { posthog } from '../lib/posthog.js';
 import { type IcebreakerProfile, type RenderedProfile } from '../lib/types.js';
@@ -252,9 +252,6 @@ async function capture(
 
 function render(context: FrameContext<FrogEnv>, profile?: IcebreakerProfile) {
   const fid = getFIDFromChannels(profile?.channels);
-  const url = fid
-    ? encodeURIComponent(`${FRAME_URL}/api/composer?fid=${fid}`)
-    : undefined;
 
   context.previousState.profile =
     compressProfile(toRenderedProfile(profile)) ?? '';
@@ -264,9 +261,6 @@ function render(context: FrameContext<FrogEnv>, profile?: IcebreakerProfile) {
       image: `/profile/${fid}`,
       browserLocation: `${APP_URL}/fid/${fid}`,
       intents: [
-        <Button.Link href={`https://warpcast.com/~/composer-action?url=${url}`}>
-          View
-        </Button.Link>,
         <Button.Link href={`${APP_URL}/fid/${fid}`}>Icebreaker</Button.Link>,
         <Button value="reset-search">Back</Button>,
       ],
