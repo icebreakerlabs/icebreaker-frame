@@ -4,6 +4,7 @@ import {
   type RenderedProfile,
   type IcebreakerProfile,
   type Channel,
+  type Credential,
 } from './lib/types.js';
 import { CLOUDINARY_AVATAR_URL } from './constants.js';
 
@@ -11,11 +12,25 @@ export function truncateAddress(address: string | undefined) {
   return address?.replace(address.slice(6, -4), '...') ?? '';
 }
 
-const PROTOCOL_MATCHER = /(^\w+:|^)\/\//;
-const TRAILING_SLASH = /\/$/;
 const CLOUDINARY_AVATAR_MATCHER =
   /^https:\/\/res\.cloudinary\.com\/merkle-manufactory\/image\/fetch\/.*?\//;
-const HIGHLIGHTED_CREDENTIALS_LIST = ['qBuilder', 'Feather Ice'];
+
+const CITY_ATTESTATIONS = ['New Yorker', 'Chicagoan', 'Londoner', 'Bostonian'];
+
+export const HIGH_SIGNAL_ATTESTATIONS = [
+  'qBuilder',
+  'Non Sibi',
+  'Mens et Manus',
+  'Interoperators',
+  'lux sub rosa',
+  ...CITY_ATTESTATIONS,
+];
+
+const HIGHLIGHTED_CREDENTIALS_LIST = [
+  'Feather Ice',
+  'Human',
+  ...HIGH_SIGNAL_ATTESTATIONS,
+];
 
 export function sanitizeAvatarURL(url?: string) {
   if (!url) {
@@ -28,6 +43,18 @@ export function sanitizeAvatarURL(url?: string) {
   }
 
   return url;
+}
+
+export function getVerifiedDomains(credentials: Credential[]) {
+  const verifiedDomains = credentials.reduce((verifiedDomains, { name }) => {
+    if (name.startsWith('Verified:')) {
+      verifiedDomains.add(name.replace('Verified: ', ''));
+    }
+
+    return verifiedDomains;
+  }, new Set<string>());
+
+  return [...verifiedDomains];
 }
 
 export function toRenderedProfile(
@@ -54,12 +81,7 @@ export function toRenderedProfile(
       profile.channels?.flatMap(({ isVerified, type }) =>
         isVerified ? type : [],
       ) ?? [],
-    verifiedCompanies:
-      profile.workExperience?.flatMap(({ isVerified, orgWebsite }) =>
-        isVerified && orgWebsite
-          ? orgWebsite.replace(PROTOCOL_MATCHER, '').replace(TRAILING_SLASH, '')
-          : [],
-      ) ?? [],
+    verifiedDomains: getVerifiedDomains(profile.credentials ?? []),
     highlightedCredentials: [
       ...new Set(
         profile.credentials?.flatMap(({ name }) =>
