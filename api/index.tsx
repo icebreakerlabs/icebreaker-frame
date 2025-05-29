@@ -60,7 +60,7 @@ function Profile({
   networkingStatus,
   primarySkill,
   verifiedChannels,
-  verifiedCompanies,
+  verifiedDomains,
   highlightedCredentials,
 }: RenderedProfile) {
   return (
@@ -108,9 +108,9 @@ function Profile({
           </HStack>
         )}
 
-        {!!verifiedCompanies.length && (
+        {!!verifiedDomains.length && (
           <HStack gap="8" marginTop="6">
-            {verifiedCompanies.map((company) => (
+            {verifiedDomains.map((domain) => (
               <HStack
                 background="bg-emphasized"
                 gap="4"
@@ -125,7 +125,7 @@ function Profile({
                 color="white"
                 alignItems="center"
               >
-                {company} <Image src="/verified.png" width="12" height="12" />
+                {domain} <Image src="/verified.png" width="12" height="12" />
               </HStack>
             ))}
           </HStack>
