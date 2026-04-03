@@ -1,0 +1,14 @@
+{
+  "redirects": [
+    {
+      "source": "/teams",
+      "destination": "https://icebreaker.xyz/features",
+      "permanent": false
+    },
+    {
+      "source": "/teams/:path*",
+      "destination": "https://icebreaker.xyz/features",
+      "permanent": false
+    }
+  ]
+}
